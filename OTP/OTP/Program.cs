@@ -9,16 +9,21 @@ namespace OTP
             var notificationService = new TrafficPoliceNotificationService();
 
             notificationService.DistributeMessageToPosts(
-                1234, // Идентификатор поста
-                "Москва", // Местоположение
-                true, // Флаг чрезвычайной ситуации
-                DateTime.Now, // Время события
-                new List<string> { "Пост_1", "Пост_2" }, // Список получателей
+                1234,
+                "Москва",
+                true,
+                DateTime.Now,
+                new List<string> { "Пост_1", "Пост_2" },
                 "Центральный отдел",
                 "Дополнительная информация о происшествии");
 
-            // Демонстрация метода с переключением на случай нарушения ПДД
-            notificationService.ProcessTrafficViolation(1); // Нарушение номер 1 (превышение скорости)
+            // Использование enum для типов нарушений
+            notificationService.ProcessTrafficViolation(TrafficViolationType.Speeding);
+            notificationService.ProcessTrafficViolation(TrafficViolationType.RedLightRunning);
+
+            // Обратная совместимость с int
+            notificationService.ProcessTrafficViolation(1);
+
             notificationService.BroadcastRegionalAlert(3, "Санкт-Петербург", new[] {
                 "Адмиралтейский район", "Приморский район" });
         }

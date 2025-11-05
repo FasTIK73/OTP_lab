@@ -1,5 +1,57 @@
 ﻿namespace OTP
 {
+    public enum TrafficViolationType
+    {
+        Speeding = 1,
+        RedLightRunning = 2,
+        Unknown = 0
+    }
+
+    public interface IViolationHandler
+    {
+        void ProcessViolation();
+    }
+
+    public class SpeedingViolationHandler : IViolationHandler
+    {
+        public void ProcessViolation()
+        {
+            Console.WriteLine("Превышение скорости");
+        }
+    }
+
+    public class RedLightViolationHandler : IViolationHandler
+    {
+        public void ProcessViolation()
+        {
+            Console.WriteLine("Проезд на красный свет");
+        }
+    }
+
+    public class UnknownViolationHandler : IViolationHandler
+    {
+        public void ProcessViolation()
+        {
+            Console.WriteLine("Неизвестное нарушение");
+        }
+    }
+
+    public class ViolationHandlerFactory
+    {
+        public IViolationHandler CreateHandler(TrafficViolationType violationType)
+        {
+            switch (violationType)
+            {
+                case TrafficViolationType.Speeding:
+                    return new SpeedingViolationHandler();
+                case TrafficViolationType.RedLightRunning:
+                    return new RedLightViolationHandler();
+                default:
+                    return new UnknownViolationHandler();
+            }
+        }
+    }
+
     public abstract class NotificationBase
     {
         protected static void SendNotification(string message)
@@ -29,6 +81,13 @@
 
     public class TrafficPoliceNotificationService : NotificationBase
     {
+        private readonly ViolationHandlerFactory _violationFactory;
+
+        public TrafficPoliceNotificationService()
+        {
+            _violationFactory = new ViolationHandlerFactory();
+        }
+
         public string DistributeMessageToPosts(
             int postIdentifier,
             string postLocation,
@@ -64,23 +123,17 @@
             return "Сообщение успешно отправлено.";
         }
 
-        public void ProcessTrafficViolation(int violationTypeCode)
+        public void ProcessTrafficViolation(TrafficViolationType violationType)
         {
-            string violationDetails = GetViolationTypeDescription(violationTypeCode);
-            Console.WriteLine(violationDetails);
+            IViolationHandler handler = _violationFactory.CreateHandler(violationType);
+            handler.ProcessViolation();
         }
 
-        private string GetViolationTypeDescription(int violationTypeCode)
+        // Перегрузка для обратной совместимости
+        public void ProcessTrafficViolation(int violationTypeCode)
         {
-            switch (violationTypeCode)
-            {
-                case 1:
-                    return "Превышение скорости";
-                case 2:
-                    return "Проезд на красный свет";
-                default:
-                    return "Неизвестное нарушение";
-            }
+            TrafficViolationType violationType = (TrafficViolationType)violationTypeCode;
+            ProcessTrafficViolation(violationType);
         }
 
         public void BroadcastRegionalAlert(int alertSeverity, string regionName, string[] affectedDistricts)
