@@ -1,77 +1,78 @@
 ﻿namespace OTP
 {
-    public abstract class NotificationService
+    public abstract class NotificationBase
     {
-        public static void NotifyPosts(string message)
+        protected static void SendNotification(string message)
         {
             Console.WriteLine("Сообщение для всех постов ГИБДД: {0}", message);
         }
 
-        protected string FormatNotificationMessage(int postId, string location, string senderName)
+        protected string CreateStandardMessage(int postId, string location, string department)
         {
-            return $"Сообщение от поста №{postId}, местоположение: {location}. Отправитель: {senderName}";
+            return $"Сообщение от поста №{postId}, местоположение: {location}. Отдел: {department}";
         }
 
-        protected string FormatAlertMessage(int alertLevel, string region, string area)
+        protected string CreateAlertMessage(int alertLevel, string region, string district)
         {
-            return $"Спецуведомление уровня {alertLevel}: регион {region}, затронута область {area}";
+            return $"Спецуведомление уровня {alertLevel}: регион {region}, затронут район {district}";
         }
 
-        protected void SendBulkNotifications(List<string> recipients, string message)
+        protected void SendMultipleNotifications(List<string> recipients, string messageTemplate)
         {
             foreach (var recipient in recipients)
             {
-                NotifyPosts(message);
+                string personalizedMessage = $"{messageTemplate} | Получатель: {recipient}";
+                SendNotification(personalizedMessage);
             }
         }
     }
 
-    public class GIBDDPostNotificationSystem : NotificationService
+    public class TrafficPoliceNotificationService : NotificationBase
     {
-        public string SendMessageToAllPosts(
-            int postId,
-            string location,
-            bool isEmergency,
-            DateTime timestamp,
-            List<string> recipientsList,
-            string senderName,
-            string additionalInfo = null)
+        public string DistributeMessageToPosts(
+            int postIdentifier,
+            string postLocation,
+            bool isUrgentSituation,
+            DateTime eventTime,
+            List<string> recipientPosts,
+            string departmentName,
+            string incidentDetails = null)
         {
-            if (!IsValidRecipientList(isEmergency, recipientsList))
+            if (!ValidateRecipients(isUrgentSituation, recipientPosts))
             {
-                return GetErrorMessage(isEmergency, recipientsList);
+                return GetDistributionErrorMessage(isUrgentSituation, recipientPosts);
             }
 
-            string notificationMessage = FormatNotificationMessage(postId, location, senderName);
-            SendBulkNotifications(recipientsList, notificationMessage);
+            string notificationContent = CreateStandardMessage(postIdentifier, postLocation, departmentName);
+            SendMultipleNotifications(recipientPosts, notificationContent);
 
-            return "Сообщение успешно доставлено";
+            return "Сообщение успешно доставлено всем постам";
         }
 
-        private bool IsValidRecipientList(bool isEmergency, List<string> recipientsList)
+        private bool ValidateRecipients(bool isUrgentSituation, List<string> recipientPosts)
         {
-            return (!isEmergency && recipientsList.Count > 0) ||
-                   (isEmergency && recipientsList.Count > 0);
+            return (!isUrgentSituation && recipientPosts.Count > 0) ||
+                   (isUrgentSituation && recipientPosts.Count > 0);
         }
 
-        private string GetErrorMessage(bool isEmergency, List<string> recipientsList)
+        private string GetDistributionErrorMessage(bool isUrgentSituation, List<string> recipientPosts)
         {
-            if (isEmergency && recipientsList.Count <= 0)
+            if (isUrgentSituation && recipientPosts.Count <= 0)
             {
-                return "Отсутствуют получатели для экстренного уведомления!";
+                return "Требуются получатели для экстренного уведомления!";
             }
             return "Сообщение успешно отправлено.";
         }
 
-        public void HandleTrafficViolation(int violationCode)
+        public void ProcessTrafficViolation(int violationTypeCode)
         {
-            string violationDescription = GetViolationDescription(violationCode);
-            Console.WriteLine(violationDescription);
+            string violationDetails = GetViolationTypeDescription(violationTypeCode);
+            Console.WriteLine(violationDetails);
         }
 
-        private string GetViolationDescription(int violationCode)
+        private string GetViolationTypeDescription(int violationTypeCode)
         {
-            switch (violationCode)
+            switch (violationTypeCode)
             {
                 case 1:
                     return "Превышение скорости";
@@ -82,12 +83,12 @@
             }
         }
 
-        public void SendSpecialAlert(int alertLevel, string region, string[] affectedAreas)
+        public void BroadcastRegionalAlert(int alertSeverity, string regionName, string[] affectedDistricts)
         {
-            foreach (var area in affectedAreas)
+            foreach (var district in affectedDistricts)
             {
-                string alertMessage = FormatAlertMessage(alertLevel, region, area);
-                NotifyPosts(alertMessage);
+                string alertContent = CreateAlertMessage(alertSeverity, regionName, district);
+                SendNotification(alertContent);
             }
         }
     }
